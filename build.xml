@@ -1,0 +1,45 @@
+<project name="calculator" default="compile" basedir=".">
+	
+	<property name="src" value="./src" />
+	<property name="build" value="bin" />
+	
+	<property name="build.compiler" value="modern" />
+	
+	<target name="init">
+		<tstamp />
+		<mkdir dir="${build}" />
+	</target>
+	
+	<target name="compile" depends="init">
+		
+		<javac srcdir="${src}" destdir="${build}"
+			debug="on"
+			classpath="C:\Program\Java\jdk1.5.0_09\lib\mysql-connector-java-5.0.4-bin.jar" />
+			
+	</target>
+	
+	<target name="clean" depends="init">
+		<delete dir="${build}"/>
+	</target>
+	
+	<target name="run" depends="init,compile">
+		<java classname="se.c0la.calc.Main">
+			<classpath>
+				<pathelement path="${build}"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target name="jar" depends="compile">
+
+		<jar destfile="calc.jar" 
+			 basedir="${build}">
+			 
+			<manifest>
+				<attribute name="Main-Class" value="se.c0la.calc.Main" />
+			</manifest>
+		
+		</jar>
+	</target>
+		
+</project>
