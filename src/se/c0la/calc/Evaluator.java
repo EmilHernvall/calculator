@@ -172,7 +172,12 @@ public class Evaluator
 					result = left.multiply(right);
 					break;
 				case SLASH:
-					result = left.divide(right);
+					try {
+						result = left.divide(right);
+					} 
+					catch (ArithmeticException e) {
+						result = new BigDecimal(left.doubleValue() / right.doubleValue(), ctx);
+					}
 					break;
 				case EXPONENT:
 					result = new BigDecimal(Math.pow(left.doubleValue(), right.doubleValue()), ctx);

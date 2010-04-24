@@ -23,7 +23,7 @@ public class Lexer
 			}
 			else if (currentToken.length() > 0) {
 				String token = currentToken.toString();
-				if (token.matches("[0-9.]+")) {
+				if (token.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[eE][0-9]+")) {
 					lexeme = new Lexeme(TokenType.NUMBER, currentToken.toString());
 					lexemes.add(lexeme);				
 				} else {
@@ -77,7 +77,7 @@ public class Lexer
 		// Add any trailing tokens
 		if (currentToken.length() > 0) {
 			String token = currentToken.toString();
-			if (token.matches("[0-9.]+")) {
+			if (token.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[eE][0-9]+")) {
 				lexeme = new Lexeme(TokenType.NUMBER, currentToken.toString());
 				lexemes.add(lexeme);				
 			} else {
