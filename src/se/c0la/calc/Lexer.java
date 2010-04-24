@@ -24,11 +24,13 @@ public class Lexer
 			else if (currentToken.length() > 0) {
 				String token = currentToken.toString();
 				if (token.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[eE][0-9]+")) {
-					lexeme = new Lexeme(TokenType.NUMBER, currentToken.toString());
+					lexeme = new Lexeme(TokenType.NUMBER, token);
 					lexemes.add(lexeme);				
-				} else {
-					lexeme = new Lexeme(TokenType.VARIABLE, currentToken.toString());
+				} else if (token.matches("[A-Za-z_]+[0-9]*")) {
+					lexeme = new Lexeme(TokenType.VARIABLE, token);
 					lexemes.add(lexeme);
+				} else {
+					throw new UnknownTokenException("Unknown token: " + token);
 				}
 				
 				currentToken = new StringBuffer();
@@ -78,11 +80,13 @@ public class Lexer
 		if (currentToken.length() > 0) {
 			String token = currentToken.toString();
 			if (token.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[eE][0-9]+")) {
-				lexeme = new Lexeme(TokenType.NUMBER, currentToken.toString());
+				lexeme = new Lexeme(TokenType.NUMBER, token);
 				lexemes.add(lexeme);				
-			} else {
-				lexeme = new Lexeme(TokenType.VARIABLE, currentToken.toString());
+			} else if (token.matches("[A-Za-z_]+[0-9]*")) {
+				lexeme = new Lexeme(TokenType.VARIABLE, token);
 				lexemes.add(lexeme);
+			} else {
+				throw new UnknownTokenException("Unknown token: " + token);
 			}
 		}
 		

@@ -144,9 +144,11 @@ public class Parser
 		}
 		
 		// Handle operators in order of precedence
-		tokenList = consumeOperators(tokenList, EnumSet.of(TokenType.EXPONENT));
-		tokenList = consumeOperators(tokenList, EnumSet.of(TokenType.ASTERIX, TokenType.SLASH));
-		tokenList = consumeOperators(tokenList, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
+		tokenList = consumeUnaryOperators(tokenList, EnumSet.of(TokenType.MINUS));
+		
+		tokenList = consumeBinaryOperators(tokenList, EnumSet.of(TokenType.EXPONENT));
+		tokenList = consumeBinaryOperators(tokenList, EnumSet.of(TokenType.ASTERIX, TokenType.SLASH));
+		tokenList = consumeBinaryOperators(tokenList, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
 		
 		if (tokenList.size() != 1) {
 			throw new ParseErrorException("Something went horribly wrong along the way.");
@@ -156,13 +158,71 @@ public class Parser
 		return wrapper.getNode();
 	}
 	
+	private List<TokenWrapper> consumeUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+	throws ParseErrorException
+	{
+		List<TokenWrapper> result = new ArrayList<TokenWrapper>();
+		
+		for (int i = 0; i < tokens.size(); i++) {
+			TokenWrapper wrapper = tokens.get(i);
+			
+			if (!wrapper.isLexeme()) {
+				result.add(wrapper);
+				continue;
+			}
+			
+			Lexeme lexeme = wrapper.getLexeme();
+			
+			if (!types.contains(lexeme.getType())) {
+				result.add(new TokenWrapper(lexeme));
+				continue;
+			}
+			
+			if (i > 0) {
+				TokenWrapper prev = tokens.get(i-1);
+				
+				if (prev.isLexeme()) {
+					Lexeme prevLexeme = prev.getLexeme();
+					if (prevLexeme.getType() == TokenType.NUMBER ||
+						prevLexeme.getType() == TokenType.VARIABLE) {
+						
+						result.add(new TokenWrapper(lexeme));
+						continue;
+					}
+				}
+			}
+			
+			try {
+				TokenWrapper next = tokens.get(i+1);
+				
+				if (next.isLexeme()) {
+					Lexeme nextLexeme = next.getLexeme();
+					if (nextLexeme.getType() != TokenType.NUMBER &&
+						nextLexeme.getType() != TokenType.VARIABLE) {
+						throw new ParseErrorException("Expected number or variable");
+					}
+				}
+				
+				ASTNode node = new ASTNode(lexeme, next.getNode(), null);
+				result.add(new TokenWrapper(node));
+			}
+			catch (IndexOutOfBoundsException e) {
+				throw new ParseErrorException("Operator without argument.");
+			}
+			
+			i++;
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * This method is used to consume the specified operators from the list lexemes and
 	 * ast nodes. This is only done after all paranthesis have been removed as replaced
 	 * with AST nodes. By calling this method repeatedly according to the precedence order
 	 * of the operators, we can generate an correct AST.
 	 */
-	private List<TokenWrapper> consumeOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+	private List<TokenWrapper> consumeBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
 	throws ParseErrorException
 	{
 		List<TokenWrapper> result = new ArrayList<TokenWrapper>();
