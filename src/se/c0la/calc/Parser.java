@@ -158,6 +158,11 @@ public class Parser
 		return wrapper.getNode();
 	}
 	
+	/**
+	 * This procedure is basically dedicated to handeling stray minus signs. For example,
+	 * 10^-3 proved to be hard to handle without parsing -3 before we parse the exponent.
+	 * However, it should work with any unary operator of this kind.
+	 */
 	private List<TokenWrapper> consumeUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
 	throws ParseErrorException
 	{
@@ -166,6 +171,10 @@ public class Parser
 		for (int i = 0; i < tokens.size(); i++) {
 			TokenWrapper wrapper = tokens.get(i);
 			
+			/**
+			 * Add any ASTNode objects to the result list without
+			 * even looking at it.
+			 */
 			if (!wrapper.isLexeme()) {
 				result.add(wrapper);
 				continue;
@@ -173,14 +182,26 @@ public class Parser
 			
 			Lexeme lexeme = wrapper.getLexeme();
 			
+			/**
+			 * Check if we're interested in this type of lexeme. Otherwise,
+			 * add it to the result list directly.
+			 */
 			if (!types.contains(lexeme.getType())) {
 				result.add(new TokenWrapper(lexeme));
 				continue;
 			}
 			
+			/**
+			 * If this isn't the first lexeme in the list (-3, for example)
+			 * we have to ensure that the previous lexeme wasn't a number,
+			 * variable or an ASTNode. In that case, it is considered an
+			 * binary operator and have to be taken care of later.
+			 */
 			if (i > 0) {
 				TokenWrapper prev = tokens.get(i-1);
 				
+				// This is considered a binary operator if the preceeding
+				// lexeme is a number or a variable.
 				if (prev.isLexeme()) {
 					Lexeme prevLexeme = prev.getLexeme();
 					if (prevLexeme.getType() == TokenType.NUMBER ||
@@ -189,9 +210,19 @@ public class Parser
 						result.add(new TokenWrapper(lexeme));
 						continue;
 					}
+				} 
+				// We don't investigare nodes further. If there's a node
+				// before this lexeme, we just assume that we're dealing
+				// with a binary operator
+				else {
+					result.add(new TokenWrapper(lexeme));
+					continue;
 				}
 			}
 			
+			// Check that the next token is a number, a variable or a node.
+			// In that case, we just bundle it as a unary token and add it
+			// to the result.
 			try {
 				TokenWrapper next = tokens.get(i+1);
 				

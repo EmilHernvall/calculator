@@ -30,7 +30,7 @@ public class Lexer
 					lexeme = new Lexeme(TokenType.VARIABLE, token);
 					lexemes.add(lexeme);
 				} else {
-					throw new UnknownTokenException("Unknown token: " + token);
+					throw new UnknownTokenException(token + " is not a valid variable name, nor a number.");
 				}
 				
 				currentToken = new StringBuffer();
@@ -70,7 +70,7 @@ public class Lexer
 				case ' ':
 					continue;
 				default:
-					throw new UnknownTokenException("Unknown token: " + cur);
+					throw new UnknownTokenException(cur + " is an unknown character.");
 			}
 			
 			lexemes.add(lexeme);
@@ -86,7 +86,7 @@ public class Lexer
 				lexeme = new Lexeme(TokenType.VARIABLE, token);
 				lexemes.add(lexeme);
 			} else {
-				throw new UnknownTokenException("Unknown token: " + token);
+				throw new UnknownTokenException(token + " is not a valid variable name, nor a number.");
 			}
 		}
 		
