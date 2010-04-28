@@ -1,7 +1,6 @@
 package se.c0la.calc;
 
 import java.util.*;
-import java.io.*;
 import java.math.*;
 import java.awt.image.*;
 import javax.imageio.*;
@@ -18,6 +17,8 @@ public class FunctionPlotter
 	
 	private double lowerBoundX, upperBoundX;
 	private double lowerBoundY, upperBoundY;
+	
+	private double scaleX, scaleY;
 
 	public FunctionPlotter(Evaluator evaluator)
 	{
@@ -30,6 +31,9 @@ public class FunctionPlotter
 		this.upperBoundX = 0.0;
 		this.lowerBoundY = 0.0;
 		this.upperBoundY = 0.0;
+		
+		this.scaleX = 1.0;
+		this.scaleY = 1.0;
 	}
 	
 	public void setImageSize(int width, int height)
@@ -50,6 +54,12 @@ public class FunctionPlotter
 		this.upperBoundY = upperBound;
 	}
 	
+	public void setScale(double scaleX, double scaleY)
+	{
+		this.scaleX = scaleX;
+		this.scaleY = scaleY;
+	}
+	
 	private int getCoordinateX(double x)
 	{
 		return (int)(imageWidth * (x - lowerBoundX) / (upperBoundX - lowerBoundX));
@@ -60,10 +70,10 @@ public class FunctionPlotter
 		return (int)(imageHeight - imageHeight * (y - lowerBoundY) / (upperBoundY - lowerBoundY));
 	}
 	
-	public void plot(ASTNode expression, String var, String fileName)
+	public BufferedImage plot(ASTNode expression, String var)
 	throws Exception
 	{
-		double step = (upperBoundX - lowerBoundX) / imageWidth;
+		double step = (upperBoundX - lowerBoundX) / (imageWidth);
 		
 		BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = (Graphics2D)image.getGraphics();
@@ -82,21 +92,46 @@ public class FunctionPlotter
 		
 		g.setStroke(new BasicStroke(1.0f));
 		
+		for (double xMarker = Math.floor(lowerBoundX); xMarker < upperBoundX; xMarker += scaleX) {
+			int xMarkerPos = getCoordinateX(xMarker);
+			g.setColor(new Color(200, 200, 200));
+			g.drawLine(xMarkerPos, 0, xMarkerPos, imageHeight);
+			g.setColor(new Color(0, 0, 0));
+			g.drawLine(xMarkerPos, origoY - 10, xMarkerPos, origoY + 10);
+			g.drawString(String.format("%.2f", xMarker), xMarkerPos + 5, origoY + 25);
+		}
+		
+		for (double yMarker = Math.floor(lowerBoundX); yMarker < upperBoundY; yMarker += scaleY) {
+			int yMarkerPos = getCoordinateY(yMarker);
+			g.setColor(new Color(200, 200, 200));
+			g.drawLine(0, yMarkerPos, imageWidth, yMarkerPos);
+			g.setColor(new Color(0, 0, 0));
+			g.drawLine(origoX - 10, yMarkerPos, origoX + 10, yMarkerPos);
+			g.drawString(String.format("%.2f", yMarker), origoX + 20, yMarkerPos - 5);
+		}
+		
+		g.setColor(new Color(100, 100, 255));
+		
 		double x = lowerBoundX;
 		int prevX = -1, prevY = -1;
 		while (x < upperBoundX) {
 			evaluator.addVariable(var, new BigDecimal(x));
-			double y = evaluator.evaluate(expression).doubleValue();
+			
+			double y;
+			try {
+				y = evaluator.evaluate(expression).doubleValue();
+			}
+			catch (EvaluationException e) {
+				x += step;
+				continue;
+			}
 			
 			int xPos = getCoordinateX(x);
 			int yPos = getCoordinateY(y);
 			
 			//System.out.println(xPos + " " + yPos);
 			
-			if ((xPos >= 0 && xPos <= imageWidth) && 
-				(yPos >= 0 && yPos <= imageHeight) &&
-				(prevX != -1 && prevY != -1)) {
-				
+			if (prevX != -1 && prevY != -1) {
 				g.drawLine(prevX, prevY, xPos, yPos);
 			}
 			
@@ -105,6 +140,7 @@ public class FunctionPlotter
 			x += step;
 		}
 		
-		ImageIO.write(image, "png", new File(fileName));
+		return image;
 	}
 }
+
