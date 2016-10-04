@@ -125,7 +125,7 @@ public class Parser
 						throw new ParseErrorException("Unmatched paranthesis");
 					}
 					
-					depth--;
+					depth++;
 					break;
 
 				// Any lexemes that are not contained within a pair of paranthesis
